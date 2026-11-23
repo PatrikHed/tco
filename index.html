@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TCO Calculator – Cash, Loan or Private Leasing</title>
+  <meta name="description" content="Compare the total cost of ownership of a car bought with cash, financed with a loan, or privately leased.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+  <header class="top">
+    <img src="assets/icon.svg" width="40" height="40" alt="">
+    <div>
+      <h1>Car TCO calculator</h1>
+      <p>What does the same car really cost if you pay cash, take a loan or lease it privately?</p>
+    </div>
+    <div class="top-actions">
+      <label class="currency">Currency
+        <select id="currency" aria-label="Currency">
+          <option value="SEK">SEK</option>
+          <option value="NOK">NOK</option>
+          <option value="DKK">DKK</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="USD">USD</option>
+        </select>
+      </label>
+      <button type="button" id="import" class="btn">Import…</button>
+      <button type="button" id="export" class="btn">Export</button>
+      <button type="button" id="reset" class="btn">Reset</button>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+    </div>
+  </header>
+
+  <main class="layout">
+    <form id="inputs" class="inputs" autocomplete="off" onsubmit="return false"></form>
+    <section id="results" class="results" aria-live="polite" aria-label="Results"></section>
+  </main>
+
+  <footer class="foot">
+    <p>Estimates only. Depreciation, interest and lease terms vary by car, lender and leasing company — replace the example values with real quotes.
+      “Lost investment return” is the alternative cost of the cash paid up front (price, down payment, upfront lease payment, start fees): what it would have earned if invested instead. Monthly payments are not charged (8% a year by default; set it to 0 to ignore it).
+      Inputs are saved in this browser only.</p>
+  </footer>
+
+  <dialog id="import-dialog" class="dialog" aria-labelledby="import-title">
+    <form method="dialog" id="import-form">
+      <h2 id="import-title">Import cars</h2>
+      <div id="import-body"></div>
+      <div class="dialog-actions" id="import-actions"></div>
+    </form>
+  </dialog>
+
+  <div id="tip" class="tip" role="tooltip" hidden></div>
+  <script src="src/calc.js"></script>
+  <script src="src/share.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "tco-calculator",
+  "version": "1.0.0",
+  "description": "Total cost of ownership calculator for cash purchase, loan financing and private leasing",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "python3 -m http.server 8080"
+  }
+}
