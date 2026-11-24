@@ -126,6 +126,18 @@ select:focus-visible, input:focus-visible, button:focus-visible, summary:focus-v
 .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
 .card .sub { color: var(--ink-2); font-size: 13px; margin-bottom: 14px; }
 
+.chart-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.period-toggle {
+  display: inline-flex; gap: 2px; margin-left: auto; padding: 2px;
+  border: 1px solid var(--axis); border-radius: 999px;
+}
+.period-toggle button {
+  font: inherit; font-size: 12.5px; font-weight: 550; line-height: 1; color: var(--ink-2);
+  background: transparent; border: 0; border-radius: 999px; padding: 6px 11px; min-height: 28px; cursor: pointer;
+}
+.period-toggle button:hover:not([aria-pressed="true"]) { color: var(--ink); }
+.period-toggle button[aria-pressed="true"] { background: var(--accent-wash); color: var(--accent-ink); font-weight: 650; }
+
 .hero .eyebrow { color: var(--ink-2); font-size: 13px; }
 .hero .figure { font-size: 52px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; margin: 4px 0 6px; }
 .hero .figure small { white-space: nowrap; font-size: 18px; font-weight: 500; color: var(--ink-2); letter-spacing: 0; }

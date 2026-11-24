@@ -498,6 +498,15 @@
 
   const usedCategories = (res, list) => CATEGORIES.filter((c) => list.some((o) => o.categories[c.id] > 0.5));
 
+  const PERIODS = { month: 'Monthly', year: 'Yearly' };
+  let chartPeriod = 'month';
+
+  const periodValue = (total, months) => (chartPeriod === 'year' ? (total / months) * 12 : total / months);
+  const perPeriod = (total, months) => money(periodValue(total, months));
+  const chartSummary = (res) =>
+    `Cost over ${res.months} months, split by cost type, per ${chartPeriod}. Hover or focus a block for details.`;
+  const segAria = (o, c, v, months) => `${nameOf(o)}, ${c.label}: ${perPeriod(v, months)}, ${pct((v / o.total) * 100)} of total`;
+
   function chartCard(res) {
     const list = res.ranked;
     const max = Math.max(...list.map((o) => o.total), 1);
@@ -507,20 +516,41 @@
       const segs = used.map((c) => {
         const v = o.categories[c.id];
         if (v <= 0.5) return '';
-        const aria = `${nameOf(o)}, ${c.label}: ${money(v)}, ${pct((v / o.total) * 100)} of total`;
+        const aria = segAria(o, c, v, res.months);
         return `<div class="seg" tabindex="0" role="img" aria-label="${esc(aria)}"
           data-key="${esc(o.key)}" data-cat="${c.id}" data-value="${v}" style="width:${(v / max) * 100}%;background:${CAT_VAR[c.id]}"></div>`;
       }).join('');
       const label = carMode ? `<b>${esc(o.carName)}</b> <span class="via-inline">${esc(o.label)}</span>` : `<b>${esc(o.label)}</b>`;
-      return `<div><div class="bar-head"><span>${label}</span><span class="tot">${money(o.total)}</span></div><div class="bar">${segs}</div></div>`;
+      return `<div><div class="bar-head"><span>${label}</span><span class="tot" data-value="${o.total}">${perPeriod(o.total, res.months)}</span></div><div class="bar">${segs}</div></div>`;
     }).join('');
+    const buttons = Object.entries(PERIODS).map(([id, text]) =>
+      `<button type="button" data-period="${id}" aria-pressed="${id === chartPeriod}">${text}</button>`).join('');
     return `
-      <div class="card">
-        <h2>Where the money goes</h2>
-        <p class="sub">Total cost over ${res.months} months, split by cost type. Hover or focus a block for details.</p>
+      <div class="card chart">
+        <div class="chart-head">
+          <h2>Where the money goes</h2>
+          <div class="period-toggle" role="group" aria-label="Price breakdown period">${buttons}</div>
+        </div>
+        <p class="sub chart-sub">${chartSummary(res)}</p>
         <div class="legend">${legend}</div>
         <div class="bars">${bars}</div>
       </div>`;
+  }
+
+  function setChartPeriod(period) {
+    chartPeriod = period;
+    const res = lastResult;
+    const chart = resultsEl.querySelector('.chart');
+    if (!res || !chart) return;
+    chart.querySelector('.chart-sub').textContent = chartSummary(res);
+    chart.querySelectorAll('.period-toggle button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.period === chartPeriod)));
+    chart.querySelectorAll('.tot').forEach((el) => (el.textContent = perPeriod(parseFloat(el.dataset.value), res.months)));
+    chart.querySelectorAll('.seg').forEach((seg) => {
+      const o = res.scenarios.find((p) => p.key === seg.dataset.key);
+      const c = CATEGORIES.find((x) => x.id === seg.dataset.cat);
+      seg.setAttribute('aria-label', segAria(o, c, parseFloat(seg.dataset.value), res.months));
+    });
+    layoutBarLabels();
   }
 
   /** Table rows for a list of entries; `badge(o)` returns the badge text for a row, if any. */
@@ -572,11 +602,11 @@
   function layoutBarLabels() {
     const probe = document.createElement('canvas').getContext('2d');
     resultsEl.querySelectorAll('.seg').forEach((seg) => {
-      const label = compact(parseFloat(seg.dataset.value));
+      const label = compact(periodValue(parseFloat(seg.dataset.value), lastResult.months));
       const style = getComputedStyle(seg);
       probe.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
       const needed = probe.measureText(label).width + 20;
-      if (seg.getBoundingClientRect().width >= needed) seg.textContent = label;
+      seg.textContent = seg.getBoundingClientRect().width >= needed ? label : '';
       if (seg.dataset.cat === 'energy') seg.classList.add('dark-text'); // slot 4 (yellow) takes dark text in light mode
     });
   }
@@ -590,8 +620,8 @@
       const c = catById[seg.dataset.cat];
       const v = parseFloat(seg.dataset.value);
       tip.innerHTML = `<div class="tip-row"><i style="background:${CAT_VAR[c.id]}"></i><b>${c.label}</b></div>
-        <div>${money(v)} · ${pct((v / o.total) * 100)} of ${esc(nameOf(o))}</div>
-        <div class="muted">${money(v / res.months)} per month</div>`;
+        <div>${perPeriod(v, res.months)} per ${chartPeriod} · ${pct((v / o.total) * 100)} of ${esc(nameOf(o))}</div>
+        <div class="muted">${money(v)} over ${res.months} months</div>`;
       tip.hidden = false;
       const w = tip.offsetWidth;
       const h = tip.offsetHeight;
@@ -605,6 +635,11 @@
       seg.addEventListener('blur', () => (tip.hidden = true));
     });
   }
+
+  resultsEl.addEventListener('click', (e) => {
+    const button = e.target.closest('.period-toggle button');
+    if (button) setChartPeriod(button.dataset.period);
+  });
 
   /* One-line summary under each car's name (visible when collapsed). */
   function updateSubs(res) {
