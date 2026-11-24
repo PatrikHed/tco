@@ -150,15 +150,16 @@
   const carById = (id) => state.cars.find((c) => c.id === id);
 
   /* ------------------------------------------------------------------ formatting */
-  let fmtMoney, fmtDec;
+  let fmtMoney, fmtDec, fmtNum;
   function setupFormat() {
     const locale = LOCALES[state.currency] || 'en-GB';
     fmtMoney = new Intl.NumberFormat(locale, { style: 'currency', currency: state.currency, maximumFractionDigits: 0 });
     fmtDec = new Intl.NumberFormat(locale, { style: 'currency', currency: state.currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    fmtNum = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   }
   const money = (v) => fmtMoney.format(Math.round(v));
   const money2 = (v) => fmtDec.format(v);
-  const compact = (v) => (Math.abs(v) >= 1000 ? Math.round(v / 1000) + 'k' : String(Math.round(v)));
+  const amount = (v) => fmtNum.format(Math.round(v));
   const pct = (v) => (Math.round(v * 10) / 10).toString().replace(/\.0$/, '') + '%';
   const unitOf = (car) => (FUELS[car && car.fuel] || FUELS.petrol).unit;
   const unitText = (tpl, car) => tpl.replace('{cur}', state.currency).replace(/\{unit\}/g, unitOf(car));
@@ -602,7 +603,7 @@
   function layoutBarLabels() {
     const probe = document.createElement('canvas').getContext('2d');
     resultsEl.querySelectorAll('.seg').forEach((seg) => {
-      const label = compact(periodValue(parseFloat(seg.dataset.value), lastResult.months));
+      const label = amount(periodValue(parseFloat(seg.dataset.value), lastResult.months));
       const style = getComputedStyle(seg);
       probe.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
       const needed = probe.measureText(label).width + 20;
